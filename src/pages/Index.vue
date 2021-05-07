@@ -1,8 +1,9 @@
 <template>
-  <q-page class="flex column">
+  <q-page class="flex column" :class="bgClass">
     <div class="col q-pt-lg q-px-md">
       <q-input
-        v-model="search" 
+        v-model="search"
+        @keyup.enter="getWeatherBySearch"
         placeholder="search"
         dark
         borderless
@@ -13,7 +14,9 @@
           />
         </template>
 
-        <template v-slot:append>
+        <template v-slot:append
+          @click="getWeatherBySearch"
+        >
           <q-btn round dense flat icon="search" />
         </template>
       </q-input>
@@ -69,18 +72,50 @@ export default {
       apiKey: 'e4f0d185aea0feefc47517ab5c28f2c5'
     }
   },
+  computed: {
+    bgClass() {
+      if(this.weatherData){
+        if(this.weatherData.weather[0].icon.endsWith('n')){
+          return 'bg-night'
+        }else{
+          return 'bg-day'
+        }
+      }
+    }
+  },
   methods: {
     getLocation(){
-      navigator.geolocation.getCurrentPosition(position => {
-        this.lat = position.coords.latitude
-        this.lon = position.coords.longitude
-        this.getWeatherByCoord()
-      })
+      this.$q.loading.show();
+      if(this.$q.platform.is.electron){
+        this.$axios('https://freegeoip.app/json/')
+        .then(response => {
+          this.lat = response.data.latitude
+          this.lon = response.data.longitude
+          this.getWeatherByCoord()
+        })
+      }else{
+        navigator.geolocation.getCurrentPosition(position => {
+          this.lat = position.coords.latitude
+          this.lon = position.coords.longitude
+          this.getWeatherByCoord()
+        })
+      }
     },
     getWeatherByCoord(){
+      this.$q.loading.show();
       this.$axios(`${ this.apiUrl }?lat=${ this.lat }&lon=${ this.lon }&appid=${ this.apiKey }&units=metric`)
       .then(response => {
         this.weatherData = response.data
+        this.$q.loading.hide();
+      })
+    },
+    getWeatherBySearch(){
+      this.$q.loading.show();
+      this.$axios(`${ this.apiUrl }?q=${ this.search }&appid=${ this.apiKey }&units=metric`)
+      .then(response => {
+        this.weatherData = response.data
+        this.$q.loading.hide();
+        this.search =  ''
       })
     }
   }
@@ -90,6 +125,10 @@ export default {
 <style lang="sass">
   .q-page
     background: linear-gradient(to bottom, #136a8a, #267871)
+    &.bg-night
+      background: linear-gradient(to bottom, #232526, #414345)
+    &.bg-day
+      background: linear-gradient(to bottom, #00b4db, #0083b0)
   .degree
     top: -44px
   .skyline

@@ -94,7 +94,7 @@ module.exports = function (/* ctx */) {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: ['Loading']
     },
 
     // animations: 'all', // --- includes all animations
@@ -163,6 +163,7 @@ module.exports = function (/* ctx */) {
       bundler: 'packager', // 'packager' or 'builder'
 
       packager: {
+        plaform: 'win32'
         // https://github.com/electron-userland/electron-packager/blob/master/docs/api.md#options
 
         // OS X / Mac App Store
